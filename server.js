@@ -1,5 +1,4 @@
 const express = require ('express')
-const cors = require ('cors')
 const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.js')
 
 //Перенести все доволнительные вызовы сервера на сами вызовы
@@ -12,25 +11,27 @@ const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.
 
 const app = express ()
 
-// app (cors());
-
-app.get ("/", async (req, res) => {
+app.get ("/home", async (req, res) => {
     const meta = await GetLastMeta ();
+    console.log (meta);
     res.send (meta);
 })
 
 app.get ("/catalog", async (req, res) => {
     const meta = await GetAllMeta ();
+    console.log (meta);
     res.send (meta);
 })
 
 app.get ("/authors", async (req, res) => {
     const info = await GetAuthors ();
+    console.log (info);
     res.send (info);
 })
 
 app.get ("/article/:id", async (req, res) => {
     const returnValue = await GetArticle (req.params.id);
+    console.log (returnValue);
 
     if (returnValue != null){
         const article = {
@@ -45,4 +46,6 @@ app.get ("/article/:id", async (req, res) => {
     }
 })
 
-app.listen (5000, () => { console.log ("Server started on port 5000") })
+// app.use (cors());
+
+app.listen (4000, () => { console.log ("Server started on port 4000") })
