@@ -1,4 +1,5 @@
 const express = require ('express')
+const cors = require ('cors')
 const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.js')
 
 //Перенести все доволнительные вызовы сервера на сами вызовы
@@ -10,6 +11,8 @@ const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.
 //Перенести все повсторяющиеся функции в отдельные
 
 const app = express ()
+
+app (cors());
 
 app.get ("/home", async (req, res) => {
     const meta = await GetLastMeta ();
@@ -42,4 +45,4 @@ app.get ("/article/:id", async (req, res) => {
     }
 })
 
-app.listen (8080, () => { console.log ("Server started on port 5000") })
+app.listen (5000, () => { console.log ("Server started on port 5000") })
