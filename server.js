@@ -11,7 +11,31 @@ const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.
 
 const app = express ()
 
-app.get ("/home", async (req, res) => {
+app.all ("/", function (req, res, next) {
+    res.header ("Access-Control-Allow-Origin", "*");
+    res.header ("Access-Control-Allow-Headers", "X-Requested-with");
+    next();
+});
+
+app.all ("/catalog", function (req, res, next) {
+    res.header ("Access-Control-Allow-Origin", "*");
+    res.header ("Access-Control-Allow-Headers", "X-Requested-with");
+    next();
+});
+
+app.all ("/authors", function (req, res, next) {
+    res.header ("Access-Control-Allow-Origin", "*");
+    res.header ("Access-Control-Allow-Headers", "X-Requested-with");
+    next();
+});
+
+app.all ("/article/:id", function (req, res, next) {
+    res.header ("Access-Control-Allow-Origin", "*");
+    res.header ("Access-Control-Allow-Headers", "X-Requested-with");
+    next();
+});
+
+app.get ("/", async (req, res) => {
     const meta = await GetLastMeta ();
     console.log (meta);
     res.send (meta);
@@ -46,6 +70,4 @@ app.get ("/article/:id", async (req, res) => {
     }
 })
 
-// app.use (cors());
-
-app.listen (4000, () => { console.log ("Server started on port 4000") })
+app.listen (5000, () => { console.log ("Server started on port 5000") })
