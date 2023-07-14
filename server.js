@@ -12,9 +12,9 @@ const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.
 
 const app = express ()
 
-app (cors());
+// app (cors());
 
-app.get ("/home", async (req, res) => {
+app.get ("/", async (req, res) => {
     const meta = await GetLastMeta ();
     res.send (meta);
 })
