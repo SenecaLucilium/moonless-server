@@ -1,6 +1,6 @@
 const fs = require ('fs')
-const ARTICLEDIR = "./Tests for Moonless/"
-const AUTHORDIR = "./Test Authors/"
+const ARTICLEDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Articles/"
+const AUTHORDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Authors/"
 
 function FetchContent (text)
 {
@@ -30,13 +30,23 @@ async function AddRealNames (meta)
     return meta;
 }
 
+function sortDirectory (dir) {
+    return dir.sort ( (a, b) => {
+        let a1 = Number (a.replace (/\D/g, ""));
+        let b1 = Number (b.replace (/\D/g, ""));
+        return a1 - b1;
+    })
+}
+
 async function GetAllMeta ()
 {
     let meta = [];
-    const dir = fs.readdirSync (ARTICLEDIR);
+    let dir = fs.readdirSync (ARTICLEDIR);
+    dir = sortDirectory (dir);
 
     for (const filename of dir)
     {
+        console.log (filename);
         const content = fs.readFileSync (ARTICLEDIR + filename, 'utf8');
         meta.push (FetchMeta (content)[0]);
     }
@@ -48,7 +58,8 @@ async function GetAllMeta ()
 async function GetLastMeta ()
 {
     let meta = [];
-    const dir = fs.readdirSync (ARTICLEDIR);
+    let dir = fs.readdirSync (ARTICLEDIR);
+    dir = sortDirectory (dir);
 
     for (let i = dir.length - 1; i > dir.length - 5; i--)
     {
