@@ -1,6 +1,8 @@
 const fs = require ('fs')
 const ARTICLEDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Articles/"
+// const ARTICLEDIR = "/root/Moonless/Database/Articles/"
 const AUTHORDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Authors/"
+// const AUTHORDIR = "/root/Moonless/Database/Articles/"
 
 function FetchContent (text)
 {
@@ -46,7 +48,7 @@ async function GetAllMeta ()
 
     for (const filename of dir)
     {
-        console.log (filename);
+        // console.log (filename);
         const content = fs.readFileSync (ARTICLEDIR + filename, 'utf8');
         meta.push (FetchMeta (content)[0]);
     }
