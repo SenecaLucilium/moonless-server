@@ -1,114 +1,133 @@
 const fs = require ('fs')
-const ARTICLEDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Articles/"
-// const ARTICLEDIR = "/root/Moonless/Database/Articles/"
-const AUTHORDIR = "C:/Main/Documents/Obsidian\ Vault/Moonless\ Project/Authors/"
-// const AUTHORDIR = "/root/Moonless/Database/Articles/"
+const { MongoClient } = require ('mongodb')
 
-function FetchContent (text)
+require ('dotenv').config ();
+const MONGODB_URL = process.env.MONGODB_URL;
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME;
+const ARTICLEDIR = process.env.ARTICLEDIR;
+
+async function GetAllMeta (client)
 {
-    const content = text.substring (text.indexOf ("---", 1) + 4)
-    return content
-}
+    const info = [];
 
-function FetchMeta (text)
-{
-    const meta = JSON.parse (text.substring (text.indexOf ("---") + 4, text.indexOf ("---", 1) - 1))
-    return meta
-}
-
-async function AddRealNames (meta)
-{
-    const authors = await GetAuthors ();
-    
-    for (const article of meta) {
-        for (const author of authors) {
-            if (article.author === author.id) {
-                article.realName = author.name;
-                break;
-            }
-        }
-    }
-    
-    return meta;
-}
-
-function sortDirectory (dir) {
-    return dir.sort ( (a, b) => {
-        let a1 = Number (a.replace (/\D/g, ""));
-        let b1 = Number (b.replace (/\D/g, ""));
-        return a1 - b1;
-    })
-}
-
-async function GetAllMeta ()
-{
-    let meta = [];
-    let dir = fs.readdirSync (ARTICLEDIR);
-    dir = sortDirectory (dir);
-
-    for (const filename of dir)
-    {
-        // console.log (filename);
-        const content = fs.readFileSync (ARTICLEDIR + filename, 'utf8');
-        meta.push (FetchMeta (content)[0]);
-    }
-
-    meta = await AddRealNames (meta);
-    return meta;
-}
-
-async function GetLastMeta ()
-{
-    let meta = [];
-    let dir = fs.readdirSync (ARTICLEDIR);
-    dir = sortDirectory (dir);
-
-    for (let i = dir.length - 1; i > dir.length - 5; i--)
-    {
-        const content = fs.readFileSync (ARTICLEDIR + dir[i], 'utf8');
-        meta.push (FetchMeta (content)[0]);
-    }
-
-    meta = await AddRealNames (meta);
-    return meta;
-}
-
-async function GetArticle (id)
-{
     try {
-        const text = fs.readFileSync (ARTICLEDIR + id + ".md", 'utf8');
+        await client.connect ();
+        const collection = client.db (MONGODB_DB_NAME).collection ("ArticlesMeta");
 
-        let meta = FetchMeta (text)[0];
-        const content = FetchContent (text);
+        for await (const article of collection.find()) {
+            info.push (article);
+        } 
         
-        const authors = await GetAuthors ();
-        for (const author of authors) {
-            if (meta.author === author.id) {
-                meta.realName = author.name;
-                break;
-            }
-        }
-        return [meta, content];
+    }
+    catch (e) {
+        console.log ("Error: " + e);
+    }
+    finally {
+        return info;
+    }
+}
+
+async function GetLastMeta (client) {
+    const info = [];
+
+    try {
+        await client.connect ();
+        const collection = client.db (MONGODB_DB_NAME).collection ("ArticlesMeta");
+
+        const sort = { id: -1 };
+
+        for await (const article of collection.find ().sort (sort).limit (5)) {
+            info.push (article);
+        } 
+        
+    }
+    catch (e) {
+        console.log ("Error: " + e);
+    }
+    finally {
+        return info;
+    }
+}
+
+async function GetArticle (client, id) {
+    let text = null;
+    let meta = null;
+
+    try {
+        text = fs.readFileSync (ARTICLEDIR + id + ".md", 'utf8');
+
+        await client.connect ();
+        const collection = client.db (MONGODB_DB_NAME).collection ("ArticlesMeta");
+        const query = { "id": Number(id) };
+
+        await collection.updateOne (
+            query,
+            { $inc: { "views": 1, } }
+        )
+
+        meta = await collection.findOne (query);
+
+        
     }
     catch (e) {
         console.log ("No such article: " + e);
     }
-
-    return null;
+    finally {
+        return [meta, text];
+    }
 }
 
-async function GetAuthors ()
-{
+async function GetAuthors (client) {
     const info = [];
 
-    const dir = fs.readdirSync (AUTHORDIR);
-    for (const filename of dir)
-    {
-        const content = fs.readFileSync (AUTHORDIR + filename, 'utf8');
-        info.push (JSON.parse (content)[0]);
-    }
+    try {
+        await client.connect ();
+        const collection = client.db (MONGODB_DB_NAME).collection ("AuthorsMeta");
 
-    return info;
+        for await (const author of collection.find ()) {
+            info.push (author);
+        } 
+        
+    }
+    catch (e) {
+        console.log ("Error: " + e);
+    }
+    finally {
+        return info;
+    }
 }
 
-module.exports = { GetAllMeta, GetLastMeta, GetArticle, GetAuthors };
+async function getInfo (caseName, id = null) {
+    const client = new MongoClient (MONGODB_URL);
+    let info = null;
+
+    try {
+        await client.connect ();
+
+        switch (caseName) {
+            case '/':
+                info = await GetLastMeta (client);
+                break;
+            case '/catalog':
+                info = await GetAllMeta (client);
+                break;
+            case '/authors':
+                info = await GetAuthors (client);
+                break;
+            case '/article':
+                info = await GetArticle (client, id);
+                break;
+            default:
+                throw "404 Error";
+        }
+    }
+    catch (err) {
+        console.log (err);
+    }
+    finally {
+        await client.close();
+        return info;
+    }
+}
+
+module.exports = { getInfo };

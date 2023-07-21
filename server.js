@@ -1,5 +1,9 @@
-const express = require ('express')
-const { GetAllMeta, GetLastMeta, GetArticle, GetAuthors } = require ('./parsing.js')
+const express = require ('express');
+const { getInfo } = require ('./parsing.js');
+
+//Configure database
+// const { createMongoDB } = require ('./database_config.js');
+// createMongoDB ();
 
 const app = express ()
 
@@ -28,22 +32,22 @@ app.all ("/article/:id", function (req, res, next) {
 });
 
 app.get ("/", async (req, res) => {
-    const meta = await GetLastMeta ();
-    res.send (meta);
+    const returnValue = await getInfo ('/');
+    res.send (returnValue);
 })
 
 app.get ("/catalog", async (req, res) => {
-    const meta = await GetAllMeta ();
-    res.send (meta);
+    const returnValue = await getInfo ('/catalog');
+    res.send (returnValue);
 })
 
 app.get ("/authors", async (req, res) => {
-    const info = await GetAuthors ();
-    res.send (info);
+    const returnValue = await getInfo ('/authors');
+    res.send (returnValue);
 })
 
 app.get ("/article/:id", async (req, res) => {
-    const returnValue = await GetArticle (req.params.id);
+    const returnValue = await getInfo ('/article', req.params.id);
 
     if (returnValue != null){
         const article = {
