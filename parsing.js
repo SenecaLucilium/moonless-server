@@ -97,6 +97,41 @@ async function GetAuthors (client) {
     }
 }
 
+async function GetCounters (client, id) {
+    let info = [];
+
+    try {
+        await client.connect ();
+        const collection = client.db (MONGODB_DB_NAME).collection ("ArticlesMeta");
+        const query = { "author": id };
+
+        const resultArray = [];
+
+        for await (const article of collection.find (query)) {
+            resultArray.push (article);
+        }
+
+        let tags = [];
+        let views = 0;
+
+        for (const article of resultArray) {
+            tags = tags.concat (article.tags);
+            tags = tags.concat (article.country);
+            views += article.views;
+        }
+        let tagsSet = new Set (tags);
+        tags = Array.from (tagsSet);
+
+        info = [resultArray.length, tags.length, views];
+    }
+    catch (e) {
+        console.log ("Error: " + e);
+    }
+    finally {
+        return info;
+    }
+}
+
 async function getInfo (caseName, id = null) {
     const client = new MongoClient (MONGODB_URL);
     let info = null;
@@ -116,6 +151,9 @@ async function getInfo (caseName, id = null) {
                 break;
             case '/article':
                 info = await GetArticle (client, id);
+                break;
+            case '/author':
+                info = await GetCounters (client, id);
                 break;
             default:
                 throw "404 Error";

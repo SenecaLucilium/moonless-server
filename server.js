@@ -31,6 +31,12 @@ app.all ("/article/:id", function (req, res, next) {
     next();
 });
 
+app.all ("/author/:id", function (req, res, next) {
+    res.header ("Access-Control-Allow-Origin", "*");
+    res.header ("Access-Control-Allow-Headers", "X-Requested-with");
+    next();
+});
+
 app.get ("/", async (req, res) => {
     const returnValue = await getInfo ('/');
     res.send (returnValue);
@@ -56,6 +62,23 @@ app.get ("/article/:id", async (req, res) => {
         }
 
         res.send (article);
+    }
+    else {
+        res.send (null);
+    }
+})
+
+app.get ("/author/:id", async (req, res) => {
+    const returnValue = await getInfo ('/author', req.params.id);
+
+    if (returnValue != null) {
+        const author = {
+            articlesCounter: returnValue [0],
+            tagsCounter: returnValue [1],
+            viewsCounter: returnValue [2]
+        }
+
+        res.send (author)
     }
     else {
         res.send (null);
